@@ -1,4 +1,4 @@
-# Better auto-complete
+# Better Command Completions
 
 
 This mod lets you easily autocomplete previous commands
