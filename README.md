@@ -21,4 +21,4 @@ The *** is a word wildcard (only 1 per command as of now) so any word can be pla
 It has a weight system so more previously used commands are prioritized in the suggestion
 New modifications are loaded accross game restarts
 The file is in a csv format weight,time_made,command except for lines starting with !
-Completions lose 1 weight per day and when they reach 0 (default is 60 days)
+Completions lose 1 weight per day and when they reach 0

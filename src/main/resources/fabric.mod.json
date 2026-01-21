@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "betterautocomplete",
+  "version": "${version}",
+  "name": "Better autocomplete",
+  "description": "Autocomplete commonly and previously used commands",
+  "authors": ["xpncvr"],
+  "contact": {
+    "sources": "https://github.com/xpncvr/better-auto-complete"
+  },
+  "license": "GPL-3.0",
+  "icon": "assets/betterautocomplete/icon.png",
+  "mixins": ["betterautocomplete.mixins.json"],
+  "depends": {
+    "minecraft": "~1.21.11",
+    "java": ">=21"
+  }
+}
