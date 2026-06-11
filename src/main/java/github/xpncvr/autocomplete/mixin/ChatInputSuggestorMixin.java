@@ -1,8 +1,8 @@
 package github.xpncvr.autocomplete.mixin;
 
-import net.minecraft.client.gui.screen.ChatInputSuggestor;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.input.KeyInput;
+import net.minecraft.client.gui.components.CommandSuggestions;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.input.KeyEvent;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,32 +17,32 @@ import java.util.Optional;
 
 import static github.xpncvr.autocomplete.Main.PREDICTOR;
 
-@Mixin(ChatInputSuggestor.class)
+@Mixin(CommandSuggestions.class)
 public abstract class ChatInputSuggestorMixin {
 
     @Shadow @Final
-    private TextFieldWidget textField;
+    private EditBox input;
 
     @Shadow
-    private boolean completingSuggestions;
+    private boolean keepSuggestions;
 
     @Shadow @Nullable
-    private ChatInputSuggestor.SuggestionWindow window;
+    private CommandSuggestions.SuggestionsList suggestions;
 
     @Shadow
-    private boolean windowActive;
+    private boolean allowSuggestions;
 
     @Unique
     private Optional<String> commandPreview = Optional.empty();
 
 
-    @Inject(method = "refresh", at = @At("TAIL"))
+    @Inject(method = "updateCommandInfo", at = @At("TAIL"))
     private void predictCommandPreview(CallbackInfo ci) {
-        if (this.completingSuggestions) return;
-        if (this.window != null) return;
-        if (!this.windowActive) return;
+        if (this.keepSuggestions) return;
+        if (this.suggestions != null) return;
+        if (!this.allowSuggestions) return;
 
-        String input = this.textField.getText();
+        String input = this.input.getValue();
 
         if (input.length() <= 1) return;
 
@@ -50,7 +50,7 @@ public abstract class ChatInputSuggestorMixin {
 
         this.commandPreview.ifPresent(preview -> {
             if (preview.startsWith(input)) {
-                this.textField.setSuggestion(
+                this.input.setSuggestion(
                         preview.substring(input.length())
                 );
             }
@@ -63,32 +63,32 @@ public abstract class ChatInputSuggestorMixin {
             cancellable = true
     )
     private void acceptPreviewOnTab(
-            KeyInput input,
+            KeyEvent input,
             CallbackInfoReturnable<Boolean> cir
     ) {
-        if (!input.isTab()) return;
-        if (this.window != null) return;
+        if (!input.isCycleFocus()) return;
+        if (this.suggestions != null) return;
 
         if (this.commandPreview.isPresent()) {
             String preview = this.commandPreview.get();
 
-            this.completingSuggestions = true;
-            this.textField.setText(preview);
-            this.textField.setSelectionStart(preview.length());
-            this.textField.setSelectionEnd(preview.length());
-            this.textField.setSuggestion(null);
+            this.keepSuggestions = true;
+            this.input.setValue(preview);
+            this.input.setCursorPosition(preview.length());
+            this.input.setHighlightPos(preview.length());
+            this.input.setSuggestion(null);
             this.commandPreview = Optional.empty();
-            this.completingSuggestions = false;
+            this.keepSuggestions = false;
 
             cir.setReturnValue(true);
         }
     }
 
-    @Inject(method = "setWindowActive", at = @At("TAIL"))
+    @Inject(method = "setAllowSuggestions", at = @At("TAIL"))
     private void clearPreviewOnClose(boolean active, CallbackInfo ci) {
         if (!active) {
             this.commandPreview = Optional.empty();
-            this.textField.setSuggestion(null);
+            this.input.setSuggestion(null);
         }
     }
 }
