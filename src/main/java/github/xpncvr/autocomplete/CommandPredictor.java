@@ -91,23 +91,15 @@ public class CommandPredictor {
   public void decayWeights() {
     long now = System.currentTimeMillis();
 
-    weightedHistory
-      .entrySet()
-      .removeIf(entry -> {
-        CommandEntry ce = entry.getValue();
+    for (CommandEntry ce : weightedHistory.values()) {
+      if (ce.isPattern) continue;
 
-        if (ce.isPattern) {
-          return false;
-        }
-
-        long elapsedDays = (now - ce.lastUsed) / (24 * 60 * 60 * 1000L); // 24h
-        if (elapsedDays > 0) {
-          ce.weight -= elapsedDays;
-          return ce.weight <= 0;
-        }
-
-        return false;
-      });
+      long elapsedDays = (now - ce.lastUsed) / (24 * 60 * 60 * 1000L); // 24h
+      if (elapsedDays > 0) {
+        ce.weight = (int) Math.max(0, ce.weight - elapsedDays);
+        ce.lastUsed += elapsedDays * 24 * 60 * 60 * 1000L;
+      }
+    }
   }
 
   public void add(String command) {
@@ -119,10 +111,27 @@ public class CommandPredictor {
       existing.weight++;
       existing.lastUsed = now;
     } else if (existing == null) {
+      makeRoomForNewEntry();
       weightedHistory.put(command, new CommandEntry(60, now, false));
     }
 
     write();
+  }
+
+  private void makeRoomForNewEntry() {
+    if (weightedHistory.size() < MAX_SIZE) return;
+
+    weightedHistory
+      .entrySet()
+      .stream()
+      .filter(e -> !e.getValue().isPattern)
+      .min(
+        Comparator
+          .<Map.Entry<String, CommandEntry>>comparingInt(e -> e.getValue().weight)
+          .thenComparingLong(e -> e.getValue().lastUsed)
+      )
+      .map(Map.Entry::getKey)
+      .ifPresent(weightedHistory::remove);
   }
 
   public Optional<String> predictCommand(String input) {

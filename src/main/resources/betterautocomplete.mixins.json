@@ -1,8 +1,8 @@
 {
   "required": true,
   "package": "github.xpncvr.autocomplete.mixin",
-  "compatibilityLevel": "JAVA_21",
-  "mixins": ["CommandHistoryManagerMixin", "ChatInputSuggestorMixin"],
+  "compatibilityLevel": "JAVA_25",
+  "mixins": ["CommandHistoryMixin", "CommandSuggestionsMixin"],
   "injectors": {
     "defaultRequire": 1
   }
