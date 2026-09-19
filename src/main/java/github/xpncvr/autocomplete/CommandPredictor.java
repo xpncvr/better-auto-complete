@@ -33,6 +33,7 @@ public class CommandPredictor {
   public CommandPredictor(Path directoryPath) {
     this.path = directoryPath.resolve(FILENAME);
     load();
+    decayWeights();
   }
 
   private void load() {
